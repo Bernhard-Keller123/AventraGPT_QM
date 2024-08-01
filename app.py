@@ -2,9 +2,9 @@ import openai
 import streamlit as st
 import requests
 import json
-import chardet  # Make sure chardet is imported
+import chardet  # Ensure chardet is imported
 
-# Greife auf den API-Schlüssel aus der Umgebungsvariable 
+# Get the API key from environment variables
 api_key = st.secrets['OPENAI_API']
 
 if not api_key:
@@ -16,13 +16,23 @@ else:
 # URL of the trainingsdaten.json file in your GitHub repository
 url = "https://raw.githubusercontent.com/Bernhard-Keller123/AventraGPT_QM/main/trainingdata.json"
 
-# Funktion zum Laden der Trainingsdaten von GitHub
+# Function to load training data from GitHub
 def lade_trainingsdaten_aus_github(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        return json.loads(response.content)
-    else:
-        st.error("Fehler beim Laden der Trainingsdaten von GitHub")
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Check for HTTP errors
+        content = response.content.decode('utf-8')  # Decode content
+        if content:
+            try:
+                return json.loads(content)  # Parse JSON data
+            except json.JSONDecodeError:
+                st.error("Fehler beim Parsen der JSON-Daten von GitHub. Die Datei ist möglicherweise beschädigt oder leer.")
+                return []
+        else:
+            st.warning("Die Datei von GitHub ist leer.")
+            return []
+    except requests.RequestException as e:
+        st.error(f"Fehler beim Laden der Trainingsdaten von GitHub: {e}")
         return []
 
 trainingsdaten = lade_trainingsdaten_aus_github(url)
@@ -50,39 +60,41 @@ def generiere_antwort(prompt):
 # Streamlit App
 st.title("AventraGPT_MK")
 
-# Eingabefeld für den Prompt
+# Input field for the prompt
 prompt = st.text_input("Du: ")
 
-# Schaltfläche zum Senden des Prompts
+# Button to send the prompt
 if st.button("Senden"):
     if prompt:
         antwort = generiere_antwort(prompt)
         st.text_area("AventraGPT:", value=antwort, height=200, max_chars=None)
 
-# Datei-Upload für Trainingsdaten
+# File upload for training data
 uploaded_file = st.file_uploader("Trainingsdaten hochladen", type=["txt"])
 
-# Schaltfläche zum Laden der Trainingsdaten
+# Button to load training data
 if st.button("Trainingsdaten laden"):
     if uploaded_file:
         try:
-            # Versuche, die Datei zu lesen und die Kodierung zu erkennen
+            # Try to read the file and detect encoding
             raw_data = uploaded_file.read()
             result = chardet.detect(raw_data)
             encoding = result['encoding']
             training_data = raw_data.decode(encoding)
 
             # Update the training data and save it
-            trainingsdaten.append(training_data)
-            with open('trainingdata.json', 'w') as f:
-                json.dump({"message": "START", "data": trainingsdaten}, f, ensure_ascii=False, indent=4)
-
-            chat_history.append({"role": "system", "content": training_data})
-            st.success("Trainingsdaten erfolgreich geladen.")
+            if training_data.strip():  # Check if data is not empty
+                trainingsdaten.append(training_data)
+                with open('trainingdata.json', 'w') as f:
+                    json.dump({"message": "START", "data": trainingsdaten}, f, ensure_ascii=False, indent=4)
+                chat_history.append({"role": "system", "content": training_data})
+                st.success("Trainingsdaten erfolgreich geladen.")
+            else:
+                st.error("Die hochgeladene Datei enthält keine Daten.")
         except Exception as e:
             st.error(f"Fehler beim Laden der Datei: {e}")
 
-# Anzeige des Gesprächsverlaufs
+# Display the chat history
 st.subheader("Trainingsdaten und Gesprächsverlfs")
 for eintrag in chat_history:
     if eintrag['role'] == 'user':

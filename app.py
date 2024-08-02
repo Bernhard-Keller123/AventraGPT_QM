@@ -8,7 +8,7 @@ from github import Github
 # Greife auf den API-Schlüssel aus der Umgebungsvariable 
 api_key = st.secrets['OPENAI_API']
 github_token = st.secrets['GITHUB_TOKEN']
-repo_name = "Bernhard-Keller123/AventraGPT_MK"
+repo_name = "Bernhard-Keller123/AventraGPT_QM"
 
 if not api_key:
     st.error("Kein API-Schlüssel gesetzt. Bitte setze die Umgebungsvariable OPENAI_API_KEY.")

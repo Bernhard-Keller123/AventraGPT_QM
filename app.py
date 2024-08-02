@@ -8,7 +8,7 @@ from github import Github
 # Greife auf den API-Schlüssel aus der Umgebungsvariable 
 api_key = st.secrets['OPENAI_API']
 github_token = st.secrets['GITHUB_TOKEN']
-repo_name = "Bernhard-Keller123/AventraGPT_QM"
+repo_name = "Bernhard-Keller123/AventraGPT_MK"
 
 if not api_key:
     st.error("Kein API-Schlüssel gesetzt. Bitte setze die Umgebungsvariable OPENAI_API_KEY.")
@@ -24,7 +24,7 @@ def lade_trainingsdaten_aus_github(url):
     if response.status_code == 200:
         try:
             data = json.loads(response.content)
-         
+            st.write("Geladene Trainingsdaten:", data)  # Debugging output
             if not isinstance(data, list):
                 st.error("Die Trainingsdaten müssen ein Array sein.")
                 return []
@@ -36,8 +36,26 @@ def lade_trainingsdaten_aus_github(url):
         st.error("Fehler beim Laden der Trainingsdaten von GitHub")
         return []
 
-trainingsdaten = lade_trainingsdaten_aus_github(url)
-chat_history = [{"role": "system", "content": td} for td in trainingsdaten]
+# Funktion zum Speichern der Trainingsdaten auf GitHub
+def speichere_trainingsdaten_auf_github(content, token, repo_name):
+    try:
+        g = Github(token)
+        repo = g.get_repo(repo_name)
+        file_path = "trainingdata.json"
+        try:
+            contents = repo.get_contents(file_path)
+            repo.update_file(contents.path, "update trainingdata", content, contents.sha)
+        except Exception as e:
+            repo.create_file(file_path, "create trainingdata", content)
+    except Exception as e:
+        st.error(f"Fehler beim Speichern der Trainingsdaten auf GitHub: {e}")
+
+# Load training data from GitHub on page load
+if 'trainingsdaten' not in st.session_state:
+    st.session_state.trainingsdaten = lade_trainingsdaten_aus_github(url)
+
+# Update chat history
+chat_history = [{"role": "system", "content": td} for td in st.session_state.trainingsdaten]
 
 def generiere_antwort(prompt):
     chat_history.append({"role": "user", "content": prompt})
@@ -58,22 +76,8 @@ def generiere_antwort(prompt):
             return "Du hast dein aktuelles Nutzungslimit überschritten. Bitte überprüfe deinen Plan und deine Abrechnungsdetails unter https://platform.openai.com/account/usage."
         return str(e)
 
-# Funktion zum Speichern der Trainingsdaten auf GitHub
-def speichere_trainingsdaten_auf_github(content, token, repo_name):
-    try:
-        g = Github(token)
-        repo = g.get_repo(repo_name)
-        file_path = "trainingdata.json"
-        try:
-            contents = repo.get_contents(file_path)
-            repo.update_file(contents.path, "update trainingdata", content, contents.sha)
-        except Exception as e:
-            repo.create_file(file_path, "create trainingdata", content)
-    except Exception as e:
-        st.error(f"Fehler beim Speichern der Trainingsdaten auf GitHub: {e}")
-
 # Streamlit App
-st.title("AventraGPT_QM")
+st.title("AventraGPT_MK")
 
 # Eingabefeld für den Prompt
 prompt = st.text_input("Du: ")
@@ -98,8 +102,8 @@ if st.button("Trainingsdaten laden"):
             training_data = raw_data.decode(encoding)
 
             # Update the training data and save it
-            trainingsdaten.append(training_data)
-            json_data = json.dumps(trainingsdaten, ensure_ascii=False, indent=4)
+            st.session_state.trainingsdaten.append(training_data)
+            json_data = json.dumps(st.session_state.trainingsdaten, ensure_ascii=False, indent=4)
             speichere_trainingsdaten_auf_github(json_data, github_token, repo_name)
 
             chat_history.append({"role": "system", "content": training_data})

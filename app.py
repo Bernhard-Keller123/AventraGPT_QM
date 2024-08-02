@@ -8,7 +8,7 @@ from github import Github
 # Greife auf den API-Schlüssel aus der Umgebungsvariable 
 api_key = st.secrets['OPENAI_API']
 github_token = st.secrets['GITHUB_TOKEN']
-repo_name = "Bernhard-Keller123/AventraGPT_QM"
+repo_name = "Bernhard-Keller123/AventraGPT_MK"
 
 if not api_key:
     st.error("Kein API-Schlüssel gesetzt. Bitte setze die Umgebungsvariable OPENAI_API_KEY.")
@@ -24,6 +24,7 @@ def lade_trainingsdaten_aus_github(url):
     if response.status_code == 200:
         try:
             data = json.loads(response.content)
+            st.write("Geladene Trainingsdaten:", data)  # Debugging output
             if not isinstance(data, list):
                 st.error("Die Trainingsdaten müssen ein Array sein.")
                 return []

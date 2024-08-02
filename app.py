@@ -115,4 +115,3 @@ for eintrag in chat_history:
         st.write(f"LLM: {eintrag['content']}")
     elif eintrag['role'] == 'system':
         st.write(f"System: {eintrag['content']}")
-

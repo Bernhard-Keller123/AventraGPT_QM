@@ -16,14 +16,18 @@ else:
     openai.api_key = api_key
 
 # URL of the trainingsdaten.json file in your GitHub repository
-url = "https://raw.githubusercontent.com/Bernhard-Keller123/AventraGPT_QM/main/trainingdata.json"
+url = f"https://raw.githubusercontent.com/{repo_name}/main/trainingdata.json"
 
 # Funktion zum Laden der Trainingsdaten von GitHub
 def lade_trainingsdaten_aus_github(url):
     response = requests.get(url)
     if response.status_code == 200:
         try:
-            return json.loads(response.content)
+            data = json.loads(response.content)
+            if not isinstance(data, list):
+                st.error("Die Trainingsdaten müssen ein Array sein.")
+                return []
+            return data
         except json.JSONDecodeError:
             st.error("Fehler beim Parsen der JSON-Daten von GitHub. Die Datei ist möglicherweise beschädigt oder leer.")
             return []
@@ -103,7 +107,7 @@ if st.button("Trainingsdaten laden"):
             st.error(f"Fehler beim Laden der Datei: {e}")
 
 # Anzeige des Gesprächsverlaufs
-st.subheader("Trainingsdaten und Gesprächsverl")
+st.subheader("Trainingsdaten und Gesprächsverlauf")
 for eintrag in chat_history:
     if eintrag['role'] == 'user':
         st.write(f"Du: {eintrag['content']}")

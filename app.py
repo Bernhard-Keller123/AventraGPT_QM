@@ -2,10 +2,13 @@ import openai
 import streamlit as st
 import requests
 import json
-import chardet  # Ensure chardet is imported
+import chardet
+import base64
+from github import Github
 
 # Get the API key from environment variables
 api_key = st.secrets['OPENAI_API']
+github_token = st.secrets['GITHUB_TOKEN']  # Add your GitHub token in Streamlit secrets
 
 if not api_key:
     st.error("Kein API-Schlüssel gesetzt. Bitte setze die Umgebungsvariable OPENAI_API_KEY.")
@@ -13,10 +16,18 @@ else:
     openai.api_key = api_key
     st.write(f" ")
 
-# URL of the trainingsdaten.json file in your GitHub repository
-url = "https://raw.githubusercontent.com/Bernhard-Keller123/AventraGPT_QM/main/trainingdata.json"
+# GitHub repository details
+repo_name = "Bernhard-Keller123/AventraGPT_QM"
+file_path = "trainingdata.json"
 
-# Function to load training data from GitHub
+# Initialize GitHub client
+g = Github(github_token)
+repo = g.get_repo(repo_name)
+
+# URL of the trainingsdaten.json file in your GitHub repository
+url = f"https://raw.githubusercontent.com/{repo_name}/main/{file_path}"
+
+# Funktion zum Laden der Trainingsdaten von GitHub
 def lade_trainingsdaten_aus_github(url):
     try:
         response = requests.get(url)
@@ -57,6 +68,15 @@ def generiere_antwort(prompt):
             return "Du hast dein aktuelles Nutzungslimit überschritten. Bitte überprüfe deinen Plan und deine Abrechnungsdetails unter https://platform.openai.com/account/usage."
         return str(e)
 
+# Function to update training data on GitHub
+def update_trainingdata_on_github(repo, file_path, content):
+    try:
+        file = repo.get_contents(file_path)
+        repo.update_file(file.path, "Updated training data", content, file.sha)
+        st.success("Trainingsdaten erfolgreich auf GitHub aktualisiert.")
+    except Exception as e:
+        st.error(f"Fehler beim Aktualisieren der Datei auf GitHub: {e}")
+
 # Streamlit App
 st.title("AventraGPT_MK")
 
@@ -82,13 +102,12 @@ if st.button("Trainingsdaten laden"):
             encoding = result['encoding']
             training_data = raw_data.decode(encoding)
 
-            # Update the training data and save it
+            # Update the training data and save it to GitHub
             if training_data.strip():  # Check if data is not empty
                 trainingsdaten.append(training_data)
-                with open('trainingdata.json', 'w') as f:
-                    json.dump({"message": "START", "data": trainingsdaten}, f, ensure_ascii=False, indent=4)
+                updated_content = json.dumps({"message": "START", "data": trainingsdaten}, ensure_ascii=False, indent=4)
+                update_trainingdata_on_github(repo, file_path, updated_content)
                 chat_history.append({"role": "system", "content": training_data})
-                st.success("Trainingsdaten erfolgreich geladen.")
             else:
                 st.error("Die hochgeladene Datei enthält keine Daten.")
         except Exception as e:

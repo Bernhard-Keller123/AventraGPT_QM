@@ -73,7 +73,7 @@ def speichere_trainingsdaten_auf_github(content, token, repo_name):
         st.error(f"Fehler beim Speichern der Trainingsdaten auf GitHub: {e}")
 
 # Streamlit App
-st.title("AventraGPT_MK")
+st.title("AventraGPT_QM")
 
 # Eingabefeld für den Prompt
 prompt = st.text_input("Du: ")

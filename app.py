@@ -8,7 +8,7 @@ from github import Github
 # Greife auf den API-Schlüssel aus der Umgebungsvariable 
 api_key = st.secrets['OPENAI_API']
 github_token = st.secrets['GITHUB_TOKEN']
-repo_name = "Bernhard-Keller123/AventraGPT_MK"
+repo_name = "Bernhard-Keller123/AventraGPT_QM"
 
 if not api_key:
     st.error("Kein API-Schlüssel gesetzt. Bitte setze die Umgebungsvariable OPENAI_API_KEY.")
@@ -16,7 +16,7 @@ else:
     openai.api_key = api_key
 
 # URL of the trainingsdaten.json file in your GitHub repository
-url = "https://raw.githubusercontent.com/Bernhard-Keller123/AventraGPT_MK/main/trainingdata.json"
+url = "https://raw.githubusercontent.com/Bernhard-Keller123/AventraGPT_QM/main/trainingdata.json"
 
 # Funktion zum Laden der Trainingsdaten von GitHub
 def lade_trainingsdaten_aus_github(url):

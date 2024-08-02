@@ -24,7 +24,7 @@ def lade_trainingsdaten_aus_github(url):
     if response.status_code == 200:
         try:
             data = json.loads(response.content)
-            st.write("Geladene Trainingsdaten:", data)  # Debugging output
+          
             if not isinstance(data, list):
                 st.error("Die Trainingsdaten müssen ein Array sein.")
                 return []
@@ -114,10 +114,7 @@ if st.button("Trainingsdaten laden"):
         except Exception as e:
             st.error(f"Fehler beim Laden der Datei: {e}")
 
-# Schaltfläche zum Aktualisieren der Trainingsdaten
-if st.button("Aktualisieren"):
-    load_data()
-    st.success("Trainingsdaten erfolgreich aktualisiert.")
+
 
 # Anzeige der Trainingsdaten und des Gesprächsverlaufs
 st.subheader("Trainingsdaten und Gesprächsverlauf")

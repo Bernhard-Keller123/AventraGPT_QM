@@ -2,7 +2,7 @@ import openai
 import streamlit as st
 import requests
 import json
-import chardet  # Make sure chardet is imported
+import chardet
 from github import Github
 
 # Greife auf den API-Schlüssel aus der Umgebungsvariable 
@@ -50,9 +50,12 @@ def speichere_trainingsdaten_auf_github(content, token, repo_name):
     except Exception as e:
         st.error(f"Fehler beim Speichern der Trainingsdaten auf GitHub: {e}")
 
-# Load training data from GitHub on page load
-if 'trainingsdaten' not in st.session_state:
+# Load training data from GitHub on page load or when refresh button is clicked
+def load_data():
     st.session_state.trainingsdaten = lade_trainingsdaten_aus_github(url)
+
+if 'trainingsdaten' not in st.session_state:
+    load_data()
 
 # Update chat history
 chat_history = [{"role": "system", "content": td} for td in st.session_state.trainingsdaten]
@@ -111,7 +114,12 @@ if st.button("Trainingsdaten laden"):
         except Exception as e:
             st.error(f"Fehler beim Laden der Datei: {e}")
 
-# Anzeige des Gesprächsverlaufs
+# Schaltfläche zum Aktualisieren der Trainingsdaten
+if st.button("Aktualisieren"):
+    load_data()
+    st.success("Trainingsdaten erfolgreich aktualisiert.")
+
+# Anzeige der Trainingsdaten und des Gesprächsverlaufs
 st.subheader("Trainingsdaten und Gesprächsverlauf")
 for eintrag in chat_history:
     if eintrag['role'] == 'user':
